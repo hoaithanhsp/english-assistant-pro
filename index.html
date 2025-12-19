@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ENGLISH ASSISTANT PRO - AI Exam Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#2563eb', // blue-600
+              secondary: '#475569', // slate-600
+            },
+            fontFamily: {
+              serif: ['Times New Roman', 'serif'],
+              sans: ['ui-sans-serif', 'system-ui', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      .exam-section-title {
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 0.25rem;
+      }
+      
+      .exam-question {
+        margin-bottom: 1.25rem;
+        page-break-inside: avoid;
+      }
+      
+      .question-label {
+        font-weight: 700;
+        margin-right: 0.5rem;
+      }
+      
+      .question-content {
+        line-height: 1.6;
+      }
+
+      .sub-question {
+        margin-left: 1.5rem;
+        margin-top: 0.5rem;
+      }
+
+      @media print {
+        .no-print { display: none !important; }
+        body { background: white; color: black; }
+        .exam-paper {
+          box-shadow: none !important;
+          border: none !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          width: 100% !important;
+        }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
+    "docx": "https://esm.sh/docx@8.5.0",
+    "mammoth": "https://esm.sh/mammoth@1.6.0",
+    "pdfjs-dist": "https://esm.sh/pdfjs-dist@4.0.379"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-gray-50 text-slate-900 antialiased">
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
