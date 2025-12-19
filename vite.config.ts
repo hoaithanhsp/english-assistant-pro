@@ -21,6 +21,11 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       target: 'esnext',
-    }
+    },
+    esbuild: {
+      supported: {
+        'top-level-await': true
+      },
+    },
   };
 });
