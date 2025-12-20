@@ -49,12 +49,12 @@ const ExamForm: React.FC<ExamFormProps> = ({ onSubmit, isGenerating }) => {
   const [examType, setExamType] = useState(DATA[LEVELS.MIDDLE].times[1]);
   const [topic, setTopic] = useState('');
   const [trendingTopic, setTrendingTopic] = useState(DATA[LEVELS.MIDDLE].trends[0]);
-  
+
   const [matrixContent, setMatrixContent] = useState('');
   const [specificationContent, setSpecificationContent] = useState('');
   const [structureContent, setStructureContent] = useState('');
   const [references, setReferences] = useState<ReferenceItem[]>([]);
-  
+
   const [isParsingMatrix, setIsParsingMatrix] = useState(false);
   const [isParsingSpec, setIsParsingSpec] = useState(false);
   const [isParsingStructure, setIsParsingStructure] = useState(false);
@@ -74,7 +74,7 @@ const ExamForm: React.FC<ExamFormProps> = ({ onSubmit, isGenerating }) => {
 
   const extractTextFromFile = async (file: File): Promise<string> => {
     const fileType = file.name.split('.').pop()?.toLowerCase();
-    
+
     if (fileType === 'docx') {
       const arrayBuffer = await file.arrayBuffer();
       const result = await mammoth.extractRawText({ arrayBuffer });
@@ -154,16 +154,16 @@ const ExamForm: React.FC<ExamFormProps> = ({ onSubmit, isGenerating }) => {
       .map(r => `--- SOURCE: ${r.name} ---\n${r.content}`)
       .join('\n\n');
 
-    onSubmit({ 
-      level, 
-      gradeLevel, 
-      examType, 
-      topic, 
-      trendingTopic, 
-      matrixContent, 
+    onSubmit({
+      level,
+      gradeLevel,
+      examType,
+      topic,
+      trendingTopic,
+      matrixContent,
       specificationContent,
       structureContent,
-      referenceContent: combinedRefs 
+      referenceContent: combinedRefs
     });
   };
 
@@ -189,11 +189,10 @@ const ExamForm: React.FC<ExamFormProps> = ({ onSubmit, isGenerating }) => {
               key={lvl}
               type="button"
               onClick={() => !isGenerating && setLevel(lvl)}
-              className={`flex-1 py-4 text-sm font-bold uppercase tracking-wide transition-colors ${
-                level === lvl
+              className={`flex-1 py-4 text-sm font-bold uppercase tracking-wide transition-colors ${level === lvl
                   ? 'bg-green-50 text-green-700 border-b-2 border-green-600'
                   : 'text-slate-500 hover:text-slate-700 hover:bg-gray-50'
-              } ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                } ${isGenerating ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {lvl}
             </button>
@@ -206,13 +205,49 @@ const ExamForm: React.FC<ExamFormProps> = ({ onSubmit, isGenerating }) => {
               <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-2">
                 <School className="w-4 h-4" /> Grade Level
               </label>
-              <select
-                value={gradeLevel}
-                onChange={(e) => setGradeLevel(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-green-500 outline-none bg-slate-50"
-              >
-                {DATA[level as keyof typeof DATA].grades.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-              </select>
+              <div className="space-y-2">
+                <select
+                  value={gradeLevel}
+                  onChange={(e) => setGradeLevel(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-green-500 outline-none bg-slate-50"
+                >
+                  {DATA[level as keyof typeof DATA].grades.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+
+                {/* Difficulty Indicator */}
+                {(() => {
+                  const diffMap: Record<string, { stars: number, label: string, desc: string, color: string }> = {
+                    'Grade 3': { stars: 1, label: 'Starter (A1)', desc: 'Basic vocab (500+), simple sentences', color: 'text-green-500' },
+                    'Grade 4': { stars: 1, label: 'Movers (A1+)', desc: 'Daily topics, present tenses', color: 'text-green-600' },
+                    'Grade 5': { stars: 2, label: 'Flyers (A2)', desc: 'Expanded vocab, simple stories', color: 'text-green-700' },
+
+                    'Grade 6': { stars: 2, label: 'Ket (A2)', desc: 'Topic vocab (1500+), basic grammar', color: 'text-blue-500' },
+                    'Grade 7': { stars: 3, label: 'Pet (A2/B1)', desc: 'Conditionals, diverse topics', color: 'text-blue-600' },
+                    'Grade 8': { stars: 3, label: 'Pet (B1)', desc: 'Passive voice, reported speech', color: 'text-blue-700' },
+                    'Grade 9': { stars: 4, label: 'FCE (B1+)', desc: 'Complex structures, abstract concepts', color: 'text-indigo-600' },
+                    'Grade 10 Entrance': { stars: 4, label: 'Entrance Exam', desc: 'High difficulty for 9th graders', color: 'text-indigo-800' },
+
+                    'Grade 10': { stars: 4, label: 'Standard (B1)', desc: 'Academic vocab (3000+), social issues', color: 'text-orange-500' },
+                    'Grade 11': { stars: 5, label: 'Advanced (B2)', desc: 'Inversion, advanced conditionals', color: 'text-orange-600' },
+                    'Grade 12': { stars: 5, label: 'Proficiency (B2)', desc: 'Literature analysis, specialized topics', color: 'text-red-500' },
+                    'National High School Exam': { stars: 5, label: 'University Entrance', desc: 'Maximum academic complexity', color: 'text-red-600' },
+                  };
+
+                  const info = diffMap[gradeLevel] || { stars: 3, label: 'Standard', desc: '', color: 'text-slate-500' };
+
+                  return (
+                    <div className="flex items-start gap-2 p-2 bg-slate-50 rounded border border-slate-100 text-xs">
+                      <div className={`mt-0.5 font-bold ${info.color}`}>
+                        {'★'.repeat(info.stars)}{'☆'.repeat(5 - info.stars)}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-slate-700">{info.label}</div>
+                        <div className="text-slate-500 leading-tight">{info.desc}</div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
 
             <div>
@@ -229,19 +264,19 @@ const ExamForm: React.FC<ExamFormProps> = ({ onSubmit, isGenerating }) => {
             </div>
 
             <div className="lg:col-span-2">
-               <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-2">
-                  <Flame className="w-4 h-4 text-orange-500" /> Topic Trend
-               </label>
-               <select
+              <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-2">
+                <Flame className="w-4 h-4 text-orange-500" /> Topic Trend
+              </label>
+              <select
                 value={trendingTopic}
                 onChange={(e) => setTrendingTopic(e.target.value)}
                 className="w-full px-4 py-2 rounded-lg border border-orange-200 focus:ring-2 focus:ring-orange-500 outline-none bg-orange-50 text-orange-900 font-medium"
-               >
-                 {DATA[level as keyof typeof DATA].trends.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-               </select>
+              >
+                {DATA[level as keyof typeof DATA].trends.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
             </div>
           </div>
-          
+
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
@@ -249,7 +284,7 @@ const ExamForm: React.FC<ExamFormProps> = ({ onSubmit, isGenerating }) => {
               </label>
               <div className="flex gap-2">
                 {references.length > 0 && (
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setReferences([])}
                     className="flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition"
@@ -257,7 +292,7 @@ const ExamForm: React.FC<ExamFormProps> = ({ onSubmit, isGenerating }) => {
                     <Trash2 className="w-3 h-3" /> Clear All
                   </button>
                 )}
-                <button 
+                <button
                   type="button"
                   onClick={() => refFileInputRef.current?.click()}
                   disabled={isParsingRef}
@@ -267,13 +302,13 @@ const ExamForm: React.FC<ExamFormProps> = ({ onSubmit, isGenerating }) => {
                   Add Training Files
                 </button>
               </div>
-              <input 
-                type="file" 
-                ref={refFileInputRef} 
-                className="hidden" 
+              <input
+                type="file"
+                ref={refFileInputRef}
+                className="hidden"
                 multiple
                 accept=".docx,.pdf"
-                onChange={(e) => handleFileUpload(e, 'ref')} 
+                onChange={(e) => handleFileUpload(e, 'ref')}
               />
             </div>
 
@@ -292,7 +327,7 @@ const ExamForm: React.FC<ExamFormProps> = ({ onSubmit, isGenerating }) => {
                       <FileText className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
                       <span className="truncate font-medium text-emerald-900">{ref.name}</span>
                     </div>
-                    <button 
+                    <button
                       type="button"
                       onClick={() => removeReference(ref.id)}
                       className="text-emerald-400 hover:text-red-500 transition-colors"
@@ -311,75 +346,75 @@ const ExamForm: React.FC<ExamFormProps> = ({ onSubmit, isGenerating }) => {
 
           <div className="border-t border-slate-200 pt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="space-y-3">
-               <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                    <FileText className="w-4 h-4 text-blue-600" /> Exam Matrix
-                  </label>
-                  <button 
-                    type="button"
-                    onClick={() => matrixFileInputRef.current?.click()}
-                    disabled={isParsingMatrix}
-                    className="px-2 py-1 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg"
-                  >
-                    {isParsingMatrix ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
-                  </button>
-                  <input type="file" ref={matrixFileInputRef} className="hidden" accept=".docx,.pdf" onChange={(e) => handleFileUpload(e, 'matrix')} />
-               </div>
-               <textarea
-                  value={matrixContent}
-                  onChange={(e) => setMatrixContent(e.target.value)}
-                  rows={5}
-                  placeholder="Paste or upload matrix..."
-                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-xs font-mono bg-slate-50"
-               />
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <FileText className="w-4 h-4 text-blue-600" /> Exam Matrix
+                </label>
+                <button
+                  type="button"
+                  onClick={() => matrixFileInputRef.current?.click()}
+                  disabled={isParsingMatrix}
+                  className="px-2 py-1 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg"
+                >
+                  {isParsingMatrix ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                </button>
+                <input type="file" ref={matrixFileInputRef} className="hidden" accept=".docx,.pdf" onChange={(e) => handleFileUpload(e, 'matrix')} />
+              </div>
+              <textarea
+                value={matrixContent}
+                onChange={(e) => setMatrixContent(e.target.value)}
+                rows={5}
+                placeholder="Paste or upload matrix..."
+                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-xs font-mono bg-slate-50"
+              />
             </div>
 
             <div className="space-y-3">
-               <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                    <FileUp className="w-4 h-4 text-orange-600" /> Specification
-                  </label>
-                  <button 
-                    type="button"
-                    onClick={() => specFileInputRef.current?.click()}
-                    disabled={isParsingSpec}
-                    className="px-2 py-1 text-xs font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded-lg"
-                  >
-                    {isParsingSpec ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
-                  </button>
-                  <input type="file" ref={specFileInputRef} className="hidden" accept=".docx,.pdf" onChange={(e) => handleFileUpload(e, 'spec')} />
-               </div>
-               <textarea
-                  value={specificationContent}
-                  onChange={(e) => setSpecificationContent(e.target.value)}
-                  rows={5}
-                  placeholder="Paste or upload specification..."
-                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-orange-500 outline-none text-xs font-mono bg-slate-50"
-               />
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <FileUp className="w-4 h-4 text-orange-600" /> Specification
+                </label>
+                <button
+                  type="button"
+                  onClick={() => specFileInputRef.current?.click()}
+                  disabled={isParsingSpec}
+                  className="px-2 py-1 text-xs font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded-lg"
+                >
+                  {isParsingSpec ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                </button>
+                <input type="file" ref={specFileInputRef} className="hidden" accept=".docx,.pdf" onChange={(e) => handleFileUpload(e, 'spec')} />
+              </div>
+              <textarea
+                value={specificationContent}
+                onChange={(e) => setSpecificationContent(e.target.value)}
+                rows={5}
+                placeholder="Paste or upload specification..."
+                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-orange-500 outline-none text-xs font-mono bg-slate-50"
+              />
             </div>
 
             <div className="space-y-3">
-               <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                    <LayoutTemplate className="w-4 h-4 text-purple-600" /> Target Structure
-                  </label>
-                  <button 
-                    type="button"
-                    onClick={() => structureFileInputRef.current?.click()}
-                    disabled={isParsingStructure}
-                    className="px-2 py-1 text-xs font-bold text-purple-600 bg-purple-50 border border-purple-200 rounded-lg"
-                  >
-                    {isParsingStructure ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
-                  </button>
-                  <input type="file" ref={structureFileInputRef} className="hidden" accept=".docx,.pdf" onChange={(e) => handleFileUpload(e, 'structure')} />
-               </div>
-               <textarea
-                  value={structureContent}
-                  onChange={(e) => setStructureContent(e.target.value)}
-                  rows={5}
-                  placeholder="Upload an exam to use its exact section structure..."
-                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-purple-500 outline-none text-xs font-mono bg-slate-50"
-               />
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <LayoutTemplate className="w-4 h-4 text-purple-600" /> Target Structure
+                </label>
+                <button
+                  type="button"
+                  onClick={() => structureFileInputRef.current?.click()}
+                  disabled={isParsingStructure}
+                  className="px-2 py-1 text-xs font-bold text-purple-600 bg-purple-50 border border-purple-200 rounded-lg"
+                >
+                  {isParsingStructure ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                </button>
+                <input type="file" ref={structureFileInputRef} className="hidden" accept=".docx,.pdf" onChange={(e) => handleFileUpload(e, 'structure')} />
+              </div>
+              <textarea
+                value={structureContent}
+                onChange={(e) => setStructureContent(e.target.value)}
+                rows={5}
+                placeholder="Upload an exam to use its exact section structure..."
+                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-purple-500 outline-none text-xs font-mono bg-slate-50"
+              />
             </div>
           </div>
 
@@ -387,11 +422,10 @@ const ExamForm: React.FC<ExamFormProps> = ({ onSubmit, isGenerating }) => {
             <button
               type="submit"
               disabled={isGenerating}
-              className={`w-full py-4 rounded-xl font-bold text-white shadow-lg transition-all transform hover:-translate-y-1 ${
-                isGenerating
+              className={`w-full py-4 rounded-xl font-bold text-white shadow-lg transition-all transform hover:-translate-y-1 ${isGenerating
                   ? 'bg-slate-400 cursor-not-allowed'
                   : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
-              }`}
+                }`}
             >
               {isGenerating ? "Analyzing Inputs & Training Data..." : "GENERATE FINAL EXAM"}
             </button>
