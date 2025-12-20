@@ -9,11 +9,7 @@ const MODEL_PRIORITY = [
   "gemini-2.5-pro"
 ];
 
-const KB_HIGH_GRADE_10 = `
-- Level: Grade 10-12 (2018 Standards).
-- Structure: Part I (Multiple Choice - Reading, Phonetics, Grammar, Vocabulary), Part II (Writing - Word Form, Rewrite).
-- Cognitive levels: Recognition (40%), Understanding (30%), Application (20%), High Application (10%).
-`;
+
 
 /**
  * Helper to clean and parse JSON, even if slightly malformed or truncated.
@@ -68,8 +64,62 @@ async function callWithFallback(params: Omit<GenerateContentParameters, 'model'>
   throw new Error(`All AI models failed. Last error: ${errorMessage}`);
 }
 
+const DIFFICULTY_RULES = {
+  'Primary': `
+    **For PRIMARY (Grade 3-5):**
+    - Vocabulary: Basic 500-1000 common words
+    - Grammar: Simple present, present continuous, basic sentence structures
+    - Reading passages: 80-150 words, simple topics (family, school, animals, daily activities)
+    - Question types: Multiple choice, fill-in-the-blank, picture matching
+    - Language complexity: A1-A2 CEFR level
+    - Sentence length: 5-10 words average
+    - Instructions: Simple and clear Vietnamese translations provided
+    
+    Example differentiation:
+    - Grade 3: "The cat is on the table." (Simple present, basic vocabulary)
+  `,
+  'Middle School': `
+    **For MIDDLE SCHOOL (Grade 6-9):**
+    - Vocabulary: 1500-2500 words, topic-based vocabulary
+    - Grammar: All basic tenses, conditionals, passive voice, reported speech
+    - Reading passages: 200-300 words, varied topics (culture, environment, technology basics)
+    - Question types: Multiple choice, gap-filling, short answers, true/false
+    - Language complexity: A2-B1 CEFR level
+    - Sentence length: 10-15 words average
+    - Mix of concrete and some abstract concepts
+    
+    Example differentiation:
+    - Grade 7: "If I had more time, I would visit my grandparents." (Second conditional, family relationships)
+  `,
+  'High School': `
+    **For HIGH SCHOOL (Grade 10-12):**
+    - Vocabulary: 3000-5000 words, academic and specialized vocabulary
+    - Grammar: Complex structures, inversion, cleft sentences, advanced conditionals
+    - Reading passages: 350-500 words, academic topics (science, social issues, literature analysis)
+    - Question types: Multiple choice, long answers, essay-style, inference questions
+    - Language complexity: B1-B2 CEFR level
+    - Sentence length: 15-20 words average
+    - Abstract thinking and critical analysis required
+    
+    Example differentiation:
+    - Grade 11: "Despite numerous challenges, the environmental conservation movement has gained significant momentum globally." (Complex sentence, academic vocabulary)
+  `
+};
+
 export const generateExam = async (config: ExamConfig, onProgress?: ProgressCallback): Promise<ExamData> => {
-  const kb = config.level === 'High School' ? KB_HIGH_GRADE_10 : `Standard ${config.level} instructions.`;
+  const difficultyRule = DIFFICULTY_RULES[config.level as keyof typeof DIFFICULTY_RULES] || DIFFICULTY_RULES['Middle School'];
+
+  const systemInstruction = `
+    When user selects a grade level, you MUST:
+    1. Analyze the selected grade (${config.gradeLevel})
+    2. Apply the appropriate difficulty parameters below
+    3. Generate exam content that matches EXACTLY the complexity level for that grade
+    4. Use age-appropriate topics and contexts
+    5. Adjust vocabulary, grammar structures, and cognitive demands accordingly
+    6. Ensure reading passages and questions are neither too easy nor too difficult for the target grade
+    
+    ${difficultyRule}
+  `;
 
   // STEP 1: STRUCTURAL ANALYSIS
   onProgress?.("Step 1/2: Analyzing Matrix & Training Data...");
@@ -83,6 +133,9 @@ export const generateExam = async (config: ExamConfig, onProgress?: ProgressCall
     Role: Senior Assessment Specialist.
     Analyze these requirements and create a logic-only blueprint.
     
+    STRICT DIFFICULTY CONTROL:
+    ${systemInstruction}
+
     Target Structure: ${config.structureContent || "Standard GDPT 2018"}
     Matrix: ${prunedMatrix}
     Spec: ${prunedSpec}
@@ -91,7 +144,7 @@ export const generateExam = async (config: ExamConfig, onProgress?: ProgressCall
     Task:
     1. Extract number of questions per section.
     2. Define grammar/vocab focus per section.
-    3. Generate a High-Quality Reading Passage (concise, ~250 words).
+    3. Generate a High-Quality Reading Passage (concise, ~250 words) appropriate for ${config.gradeLevel}.
     4. Provide a structural plan. No full JSON yet.
   `;
 
@@ -103,6 +156,9 @@ export const generateExam = async (config: ExamConfig, onProgress?: ProgressCall
   const step2Prompt = `
     Role: Professional English Teacher.
     Create the FINAL EXAM JSON based on this plan: ${plan}
+    
+    CRITICAL DIFFICULTY ENFORCEMENT for ${config.gradeLevel}:
+    ${systemInstruction}
     
     CRITICAL RULES for JSON Size Efficiency:
     1. DO NOT repeat the reading passage or long descriptions inside individual 'questions'. 
